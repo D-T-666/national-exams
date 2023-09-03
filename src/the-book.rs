@@ -106,7 +106,7 @@ fn save_faculty_plot(
         )
         .set_x_range(Fix(0.0), Fix(students.len() as f64 + 1.0));
 
-    fg.save_to_eps(&name, 6.0, 8.0)
+    fg.save_to_eps(name, 6.0, 8.0)
 }
 
 fn compile_pdf(book_path: &str) {
@@ -139,8 +139,8 @@ impl PDFMaker {
         }
 
         Self {
-            work_path: work_path,
-            output_file: output_file,
+            work_path,
+            output_file,
             top_list_string: None,
             faculty_strings: None,
             has_graphs: HashSet::new(),
@@ -340,7 +340,7 @@ impl PDFMaker {
 
             res += "\n\\end{longtable}";
 
-            full_res.push((String::from(faculty_id), res));
+            full_res.push((faculty_id, res));
         }
 
         self.faculty_strings = Some(full_res);

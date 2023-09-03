@@ -17,7 +17,7 @@ pub fn read_publication_tsv(
     reader
         .read_to_string(&mut file_contents)
         .expect("couldn't read the file");
-    let file_contents = file_contents.split("\n");
+    let file_contents = file_contents.split('\n');
 
     let mut students = Vec::new();
     let mut schools = HashMap::new();
@@ -28,10 +28,10 @@ pub fn read_publication_tsv(
     let mut current_subjects: Vec<Subject> = Vec::new();
 
     for raw_line in file_contents {
-        let line = raw_line.trim().split("\t").collect_vec();
+        let line = raw_line.trim().split('\t').collect_vec();
 
         if line.iter().all(|col| col.parse::<f32>().is_ok()) {
-            if let Some(_) = faculty_id {
+            if faculty_id.is_some() {
                 let student_id = String::from(line[1]);
                 let mut scores = [None; ALL_SUBJECTS.len()];
 
@@ -58,50 +58,46 @@ pub fn read_publication_tsv(
                     overall_score,
                     placement: None,
                     faculty_id: faculty_id.clone().unwrap(),
-                    grant: grant,
+                    grant,
                 });
             }
 
             // break;
-        } else {
-            if line.contains(&"%") {
-                let mut subjects = [false; 9];
-                current_subjects.clear();
+        } else if line.contains(&"%") {
+            let mut subjects = [false; 9];
+            current_subjects.clear();
 
-                for i in 1..line.len() - 2 {
-                    if let Some(subject) = Subject::from(line[i]) {
-                        current_subjects.push(subject);
-                        subjects[subject as usize] = true;
-                    }
+            for elem in line.iter().take(line.len() - 2).skip(1)  {
+                if let Some(subject) = Subject::from(elem) {
+                    current_subjects.push(subject);
+                    subjects[subject as usize] = true;
                 }
+            }
 
-                let faculty_id = faculty_id.clone().unwrap();
+            let faculty_id = faculty_id.clone().unwrap();
 
-                let faculty: Faculty = Faculty {
-                    id: faculty_id.clone(),
-                    name: faculty_name.clone().unwrap(),
-                    subjects,
+            let faculty: Faculty = Faculty {
+                id: faculty_id.clone(),
+                name: faculty_name.clone().unwrap(),
+                subjects,
+            };
+
+            if !faculties.contains_key(&faculty_id) {
+                faculties.insert(faculty_id.clone(), faculty);
+            }
+        } else if line[0].parse::<f32>().is_ok() {
+            if line[0].len() == 3 {
+                let id = String::from(line[0]);
+                let school = School {
+                    id: id.clone(),
+                    name: line[1..line.len()].join(" "),
+                    short_name: None,
                 };
 
-                if !faculties.contains_key(&faculty_id) {
-                    faculties.insert(faculty_id.clone(), faculty);
-                }
-            } else if line[0].parse::<f32>().is_ok() {
-                if line[0].len() == 3 {
-                    let id = String::from(line[0]);
-                    let school = School {
-                        id: id.clone(),
-                        name: line[1..line.len()].join(" "),
-                        short_name: None,
-                    };
-
-                    if !schools.contains_key(&id) {
-                        schools.insert(id, school);
-                    }
-                } else {
-                    faculty_name = Some(line[1..line.len()].join(" "));
-                    faculty_id = Some(String::from(line[0]));
-                }
+                schools.entry(id).or_insert(school);
+            } else {
+                faculty_name = Some(line[1..line.len()].join(" "));
+                faculty_id = Some(String::from(line[0]));
             }
         }
     }
@@ -128,7 +124,7 @@ pub fn read_independent_descaling_data(
 
         let csv_line = csv_line.iter().collect_vec();
 
-        if csv_line.len() == 0 {
+        if csv_line.is_empty() {
             continue;
         }
 
@@ -173,10 +169,10 @@ pub fn read_independent_descaling_data(
                 });
             }
             Some(ref mut stats) => {
-                if let Some(_) = min {
+                if min.is_some() {
                     stats.min = min
                 }
-                if let Some(_) = max {
+                if max.is_some() {
                     stats.max = max
                 }
                 if let Some(anchor) = anchor {
@@ -186,29 +182,22 @@ pub fn read_independent_descaling_data(
         }
     }
 
-    for i in 0..ALL_SUBJECTS.len() {
-        match independent_descaling_data[i] {
-            Some(ref mut idd) => {
-                match idd.min {
-                    None => match idd.max {
-                        Some(max) => match max {
-                            Score::Equalized(max) => {
-                                idd.min = Some(Score::Equalized(max * 0.2));
-                            }
-                            Score::EqualizedAndScaled {
-                                scaled: _,
-                                equalized,
-                            } => {
-                                idd.min = Some(Score::Equalized(equalized * 0.2));
-                            }
-                            _ => (),
-                        },
-                        None => (),
-                    },
-                    Some(_) => (),
-                };
+    for ref mut idd in independent_descaling_data.iter_mut().flatten() {
+        if idd.min.is_none() {
+            if let Some(max) = idd.max {
+                match max {
+                    Score::Equalized(max) => {
+                        idd.min = Some(Score::Equalized(max * 0.2));
+                    }
+                    Score::EqualizedAndScaled {
+                        scaled: _,
+                        equalized,
+                    } => {
+                        idd.min = Some(Score::Equalized(equalized * 0.2));
+                    }
+                    _ => (),
+                }
             }
-            None => (),
         }
     }
 

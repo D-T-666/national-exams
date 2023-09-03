@@ -114,13 +114,13 @@ impl ToString for Score {
 }
 
 impl Score {
-    pub fn to_latex(&self) -> String {
+    pub fn to_latex(self) -> String {
         match self {
             Score::Scaled(score) => format!("{{\\color{{gray}}\\scriptsize{score:.1}}}"),
             Score::Equalized(score) => format!("{score:.1}"),
             Score::EqualizedAndScaled { scaled, equalized } => format!(
                 "{:.1}{{\\color{{gray}}\\scriptsize({scaled:.1})}}",
-                (*equalized * 10.0).round() / 10.0
+                (equalized * 10.0).round() / 10.0
             ),
         }
     }
