@@ -505,7 +505,7 @@ fn main() {
     // Compile the PDF
 
     let mut pdf_out = &mut PDFMaker::new(
-        String::from(work_path),
+        work_path,
         input_file.replace(
             ".pdf",
             [

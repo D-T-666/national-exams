@@ -45,7 +45,6 @@ impl ToString for Subject {
 }
 
 impl Subject {
-    #[allow(dead_code)]
     pub fn from(s: &str) -> Option<Self> {
         use Subject as S;
         match s {
@@ -62,7 +61,6 @@ impl Subject {
         }
     }
 
-    #[allow(dead_code)]
     pub fn color(&self) -> String {
         use Subject as S;
         String::from(match self {
@@ -99,7 +97,6 @@ pub struct EqualizedScore {
     pub scaled: f32,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub enum Score {
     Scaled(f32),
@@ -145,7 +142,6 @@ pub struct School {
 
 pub const SCHOOLS_SHORT_NAMES_CSV: &str = include_str!("data/schools.csv");
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub enum Grant {
     Zero,
@@ -173,74 +169,6 @@ pub struct StudentData {
     pub placement: Option<usize>,
     pub faculty_id: String,
     pub grant: Option<Grant>,
-}
-
-#[allow(dead_code)]
-pub fn parse_student(data: Vec<String>) -> (StudentData, School, Faculty) {
-    //   [0] ,   [1]  ,     [2]   ,        [3]      ,        [4]       ,      [5]    ,    [6]
-    // ადგილი, საგნები, საკონკურსო, საგამოცდო ნომერი, ფაკულტეტის ნომერი, უნივერსიტეტი, ფაკულტეტი
-
-    let id = data[3].clone();
-
-    let score_kps = data[1]
-        .strip_prefix("{")
-        .expect("not what I expected")
-        .strip_suffix("}")
-        .expect("not what I expected")
-        .split(";")
-        .map(|a| a.split(":").collect_tuple().expect("not a key-value pair"))
-        .map(|(a, b)| (String::from(a), String::from(b)))
-        .collect_vec();
-
-    let mut scaled_scores: [Option<Score>; 9] = [None; 9];
-    let mut overall_score = String::new();
-
-    for (subject, score) in score_kps {
-        if let Some(subject) = Subject::from(subject.as_str()) {
-            scaled_scores[subject as usize] =
-                Some(Score::Scaled(score.parse().expect("not a valid score")));
-        }
-
-        if subject == "საკონკურსო" {
-            overall_score = score;
-        }
-    }
-
-    let placement = Some(data[0].parse().unwrap());
-
-    let subjects: [bool; 9] = scaled_scores.map(|a| match a {
-        None => false,
-        _ => true,
-    });
-
-    let faculty_id = data[4].clone();
-
-    let school_id = String::from(&data[4][0..3]);
-
-    let school = School {
-        name: data[5].clone(),
-        id: school_id.clone(),
-        short_name: None,
-    };
-
-    let faculty = Faculty {
-        name: [data[5].clone(), data[6].clone()].concat(),
-        id: data[4].clone(),
-        subjects,
-    };
-
-    (
-        StudentData {
-            id,
-            scores: scaled_scores,
-            placement,
-            overall_score,
-            faculty_id,
-            grant: None,
-        },
-        school,
-        faculty,
-    )
 }
 
 #[derive(Debug, Default, Clone)]

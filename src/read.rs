@@ -109,7 +109,6 @@ pub fn read_publication_tsv(
     (students, schools, faculties)
 }
 
-#[allow(dead_code)]
 pub fn read_independent_descaling_data(
     file_name: &str,
 ) -> [Option<SubjectStats>; ALL_SUBJECTS.len()] {

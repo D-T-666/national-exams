@@ -138,6 +138,7 @@ pub fn descale_with_independent_data(
 
 pub fn sort_students(students: Vec<StudentData>) -> Vec<StudentData> {
     let mut students = students;
+
     students.sort_by(|a, b| {
         b.overall_score
             .parse::<f32>()
@@ -145,6 +146,7 @@ pub fn sort_students(students: Vec<StudentData>) -> Vec<StudentData> {
             .partial_cmp(&a.overall_score.parse::<f32>().unwrap())
             .unwrap()
     });
+
     students
         .iter()
         .enumerate()
